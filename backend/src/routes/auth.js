@@ -2,7 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { sequelize } from "../db.js";
-import User from "../models/User.js";
+import { User } from "../models/index.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { HttpError } from "../errors/HttpError.js";

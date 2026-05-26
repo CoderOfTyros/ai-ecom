@@ -39,7 +39,7 @@ Product.init({
         defaultValue: 0
     },
     status: {
-        type: DataTypes.ENUM(["active", "draft", "archived"]),
+        type: DataTypes.ENUM("active", "draft", "archived"),
         allowNull: false,
         defaultValue: "active"
     }
