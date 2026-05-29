@@ -6,20 +6,20 @@ class CartItem extends Model { }
 
 CartItem.init({
     id: {
-        DataTypes: INTEGER,
+        type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
     user_id: {
-        DataTypes: INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     product_id: {
-        DataTypes: INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     quantity: {
-        DataTypes: INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false,
         validate: { min: 1, max: 99 }
     }
