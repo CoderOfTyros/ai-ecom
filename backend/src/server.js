@@ -5,6 +5,9 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { asyncHandler } from "./utils/asyncHandler.js";
 import authRouter from "./routes/auth.js";
+import productsRouter from "./routes/products.js";
+import cartRouter from "./routes/cart.js";
+import ordersRouter from "./routes/orders.js";
 import { notFound } from "./middleware/notFound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
@@ -57,6 +60,9 @@ if (!isProd) {
 }
 
 app.use("/auth", authRouter);
+app.use("/products", productsRouter);
+app.use("/cart", cartRouter);
+app.use("/orders", ordersRouter);
 
 
 // 404 must be after all routes
