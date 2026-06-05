@@ -153,14 +153,6 @@ router.get("/:id", requireAuth, asyncHandler(async (req, res) => {
         name: "id", defaultValue: undefined, min: 1, max: 2147483647
     });
 
-    if (id === undefined) {
-        throw new HttpError(400, "Invalid order id", "VALIDATION_ERROR", {
-            fields: {
-                id: "Order id is required"
-            }
-        });
-    }
-
     const order = await Order.findOne({
         where: { id, user_id: req.userId },
         include: [{

@@ -47,13 +47,9 @@ router.get("/",
 
 
 router.get("/:id", asyncHandler(async (req, res) => {
-    const id = Number(req.params.id);
-
-    if (!Number.isInteger(id) || id < 1) {
-        throw new HttpError(400, "Invalid product id", "VALIDATION_ERROR", {
-            fields: { id: "Product id must be a positive integer" }
-        });
-    }
+    const id = readIntQuery(req.query.id, {
+        name: "id", defaultValue: undefined, min: 1, max: 2147483647
+    })
 
     const product = await Product.findOne({
         where: { id, status: "active" }
