@@ -9,6 +9,7 @@ import productsRouter from "./routes/products.js";
 import cartRouter from "./routes/cart.js";
 import ordersRouter from "./routes/orders.js";
 import adminProductsRouter from "./routes/adminProducts.js";
+import adminOrdersRouter from "./routes/adminOrders.js"
 import { notFound } from "./middleware/notFound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
@@ -65,6 +66,7 @@ app.use("/products", productsRouter);
 app.use("/cart", cartRouter);
 app.use("/orders", ordersRouter);
 app.use("/admin", adminProductsRouter);
+app.use("/admin", adminOrdersRouter);
 
 
 // 404 must be after all routes
