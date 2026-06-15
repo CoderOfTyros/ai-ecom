@@ -1,2 +1,7 @@
 @import "tailwindcss";
 
+@theme {
+    --font-cardot: var(--font-cardot-family);
+    --font-azonix: var(--font-azonix-family);
+    --font-nunito: var(--font-nunito-family);
+}

@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refresh();
     }, [refresh]);
 
+    
     return (
         <AuthContext.Provider value={{ user, loading, refresh, logout }}>
             {children}
