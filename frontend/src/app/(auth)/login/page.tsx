@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError } from "@/lib/api/api";
 import { useAuth } from "@/context/AuthContext";
 import type { User } from "@/types";
 import Image from "next/image";

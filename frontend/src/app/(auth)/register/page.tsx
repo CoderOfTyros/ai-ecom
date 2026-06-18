@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError } from "@/lib/api/api";
 import type { User } from "@/types";
 import Image from "next/image";
 
@@ -85,7 +85,7 @@ export default function RegisterPage() {
 
                         <div className="text-xl w-1/2">
                             {/* <label htmlFor="password">Password</label> */}
-                            <input type="password" id="password" placeholder="Password" className="rounded-lg border-3 border-emerald-800 w-full px-3 py-1.5" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <input type="password" id="password" minLength={8} placeholder="Password" className="rounded-lg border-3 border-emerald-800 w-full px-3 py-1.5" required value={password} onChange={(e) => setPassword(e.target.value)} />
                             {fieldErrors.password && (
                                 <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
                             )}
@@ -93,7 +93,7 @@ export default function RegisterPage() {
 
                         <div className="text-xl w-1/2">
                             {/* <label htmlFor="password">Password</label> */}
-                            <input type="password" id="confirmPassword" placeholder="Confirm Password" className="rounded-lg border-3 border-emerald-800 w-full px-3 py-1.5" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                            <input type="password" id="confirmPassword" minLength={8} placeholder="Confirm Password" className="rounded-lg border-3 border-emerald-800 w-full px-3 py-1.5" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                             {fieldErrors.confirmPassword && (
                                 <p className="mt-1 text-sm text-red-600">{fieldErrors.confirmPassword}</p>
                             )}

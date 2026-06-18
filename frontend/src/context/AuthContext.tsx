@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, createContext, useContext, useCallback, type ReactNode } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api } from "@/lib/api/api";
 import type { User } from "@/types";
 
 
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refresh();
     }, [refresh]);
 
-    
+
     return (
         <AuthContext.Provider value={{ user, loading, refresh, logout }}>
             {children}

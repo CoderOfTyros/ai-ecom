@@ -1,18 +1,6 @@
+import { ApiError } from "./ApiError";
+
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
-export class ApiError extends Error {
-    status: number;
-    code: string;
-    fields?: Record<string, string>;
-
-    constructor(status: number, message: string, code: string, fields?: Record<string, string>) {
-        super(message);
-        this.name = "ApiError";
-        this.status = status;
-        this.code = code;
-        this.fields = fields;
-    }
-}
 
 
 export async function api<T = Record<string, unknown>>(
