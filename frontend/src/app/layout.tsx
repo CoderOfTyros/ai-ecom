@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
-import { nunito } from "@/lib/fonts";
+import { nunito, azonix, cardot } from "@/lib/fonts";
 
 export const metadata: Metadata = {
   title: "Store",
@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={nunito.variable}>
+    <html lang="en" className={`${nunito.variable} ${azonix.variable} ${cardot.variable}`}>
       <body >
         <AuthProvider>
           <main>

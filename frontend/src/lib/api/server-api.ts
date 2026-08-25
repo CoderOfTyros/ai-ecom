@@ -13,7 +13,6 @@ export async function serverApi<T = Record<string, unknown>>(
     const cookieHeader = (await cookies()).toString();
 
     const res = await fetch(`${API}${path}`, {
-        cache: "no-store",
         headers: {
             ...(body ? { "Content-Type": "application/json" } : {}),
             ...(cookieHeader ? { cookie: cookieHeader } : {}),

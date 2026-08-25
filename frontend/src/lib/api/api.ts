@@ -24,6 +24,10 @@ export async function api<T = Record<string, unknown>>(
     const data = await res.json();
 
     if (!data.ok) {
+        if (res.status === 401) {
+            // To handle jwt token expiry
+            window.dispatchEvent(new Event("auth:unauthorized"));
+        }
         throw new ApiError(
             res.status,
             data.error ?? "Request failed",

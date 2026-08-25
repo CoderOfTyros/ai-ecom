@@ -92,13 +92,14 @@ router.get("/",
 
 
 
-router.get("/:id", asyncHandler(async (req, res) => {
-    const id = readIntQuery(req.params.id, {
-        name: "id", defaultValue: undefined, min: 1, max: 2147483647
-    })
+router.get("/:slug", asyncHandler(async (req, res) => {
+    // const id = readIntQuery(req.params.id, {
+    //     name: "id", defaultValue: undefined, min: 1, max: 2147483647
+    // })
+    const slug = req.params.slug;
 
     const product = await Product.findOne({
-        where: { id, status: "active" }
+        where: { slug, status: "active" }
     });
 
     if (!product) {

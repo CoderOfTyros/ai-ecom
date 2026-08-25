@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { api, ApiError } from "@/lib/api/api";
+import { ApiError } from "@/lib/api/ApiError";
+import { api } from "@/lib/api/api";
 import type { User } from "@/types";
 import Image from "next/image";
 
@@ -12,6 +13,8 @@ export default function RegisterPage() {
     const { refresh } = useAuth();
     const router = useRouter();
 
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -35,7 +38,7 @@ export default function RegisterPage() {
         try {
             await api<{ ok: true; user: User }>("/auth/register", {
                 method: "POST",
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ first_name: firstName, last_name: lastName, email, password })
             });
 
             await refresh();
@@ -73,10 +76,25 @@ export default function RegisterPage() {
                     <p className="ml-31 text-gray-500">Register with Email</p>
                 </div>
 
-                <div className="h-1/2 w-full">
+                <div className="h-1/2 w-full mb-4">
                     <form onSubmit={handleSubmit} className="h-full flex flex-col justify-center items-center gap-y-8">
+
+                        <div className="text-xl w-1/2 flex gap-x-4">
+                            <div>
+                                <input type="text" id="first_name" placeholder="First name" className="rounded-lg border-3 border-emerald-800 w-full px-3 py-1.5" required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                                {fieldErrors.firstName && (
+                                    <p className="mt-1 text-sm text-red-600">{fieldErrors.firstName}</p>
+                                )}
+                            </div>
+                            <div>
+                                <input type="text" id="last_name" placeholder="Last name" className="rounded-lg border-3 border-emerald-800 w-full px-3 py-1.5" required value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                                {fieldErrors.lastName && (
+                                    <p className="mt-1 text-sm text-red-600">{fieldErrors.lastName}</p>
+                                )}
+                            </div>
+                        </div>
+
                         <div className="text-xl w-1/2">
-                            {/* <label htmlFor="email">Email</label> */}
                             <input type="email" id="email" placeholder="Email" className="rounded-lg border-3 border-emerald-800 w-full px-3 py-1.5" required value={email} onChange={(e) => setEmail(e.target.value)} />
                             {fieldErrors.email && (
                                 <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
@@ -84,7 +102,6 @@ export default function RegisterPage() {
                         </div>
 
                         <div className="text-xl w-1/2">
-                            {/* <label htmlFor="password">Password</label> */}
                             <input type="password" id="password" minLength={8} placeholder="Password" className="rounded-lg border-3 border-emerald-800 w-full px-3 py-1.5" required value={password} onChange={(e) => setPassword(e.target.value)} />
                             {fieldErrors.password && (
                                 <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
@@ -92,7 +109,6 @@ export default function RegisterPage() {
                         </div>
 
                         <div className="text-xl w-1/2">
-                            {/* <label htmlFor="password">Password</label> */}
                             <input type="password" id="confirmPassword" minLength={8} placeholder="Confirm Password" className="rounded-lg border-3 border-emerald-800 w-full px-3 py-1.5" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                             {fieldErrors.confirmPassword && (
                                 <p className="mt-1 text-sm text-red-600">{fieldErrors.confirmPassword}</p>

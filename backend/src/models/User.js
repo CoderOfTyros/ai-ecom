@@ -10,6 +10,16 @@ User.init({
         autoIncrement: true
 
     },
+    first_name: {
+        type: DataTypes.STRING(100),
+        allowNull: false
+    },
+
+    last_name: {
+        type: DataTypes.STRING(100),
+        allowNull: false
+    }
+    ,
     email: {
         type: DataTypes.STRING(320),
         allowNull: false,

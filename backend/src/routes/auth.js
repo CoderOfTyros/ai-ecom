@@ -41,7 +41,7 @@ function signAuthToken(userId) {
 //ROUTES
 
 router.post("/register", asyncHandler(async (req, res) => {
-    const { email, password } = req.body ?? {};
+    const { first_name, last_name, email, password } = req.body ?? {};
 
     const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
 
@@ -63,9 +63,12 @@ router.post("/register", asyncHandler(async (req, res) => {
     let user;
     try {
         user = await User.create({
+            first_name,
+            last_name,
             email: normalizedEmail,
             password_hash: passwordHash
         });
+
 
     } catch (err) {
         if (err.name === "SequelizeUniqueConstraintError") {
@@ -83,6 +86,8 @@ router.post("/register", asyncHandler(async (req, res) => {
         ok: true,
         user: {
             id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
             email: user.email,
             is_admin: user.is_admin
         }
@@ -150,6 +155,8 @@ router.get("/me", requireAuth, asyncHandler(async (req, res) => {
         ok: true,
         user: {
             id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
             email: user.email,
             is_admin: user.is_admin
         }
