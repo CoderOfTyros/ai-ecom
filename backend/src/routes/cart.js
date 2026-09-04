@@ -7,7 +7,7 @@ import { HttpError } from "../errors/HttpError.js";
 
 const router = express.Router();
 
-const CART_PRODUCT_FIELDS = ["id", "slug", "name", "price_cents", "image_url", "category", "status"];
+const CART_PRODUCT_FIELDS = ["id", "slug", "name", "price_cents", "image_url", "category", "status", "stock_quantity"];
 
 function summarize(items) {
     let totalItems = 0;
@@ -20,6 +20,15 @@ function summarize(items) {
     }
 
     return { total_items: totalItems, subtotal_cents: subtotalCents };
+}
+
+async function getTotalItems(userId) {
+    const items = await CartItem.findAll({
+        where: { user_id: userId },
+        attributes: ["quantity"],
+    });
+
+    return items.reduce((total, item) => total + item.quantity, 0);
 }
 
 async function fetchItemWithProduct(id, userId) {
@@ -98,14 +107,15 @@ router.post("/items", requireAuth, asyncHandler(async (req, res) => {
         where: { user_id: req.userId, product_id: productId }
     });
 
+
     if (existingItem) {
         const newQuantity = quantity + existingItem.quantity;
 
         if (newQuantity > 99) {
             throw new HttpError(400, "Validation failed", "VALIDATION_ERROR", {
                 fields: {
-                    quantity: "Cart item quantity cannot exceed 99"
-                }
+                    quantity: "Cart item quantity cannot exceed 99",
+                },
             });
         }
 
@@ -115,8 +125,9 @@ router.post("/items", requireAuth, asyncHandler(async (req, res) => {
         await existingItem.save();
 
         const item = await fetchItemWithProduct(existingItem.id, req.userId);
-        return res.status(200).json({ ok: true, item });
+        const totalItems = await getTotalItems(req.userId);
 
+        return res.status(200).json({ ok: true, item, total_items: totalItems });
     }
     assertStock(product, quantity);
     const created = await CartItem.create({
@@ -126,7 +137,9 @@ router.post("/items", requireAuth, asyncHandler(async (req, res) => {
     });
 
     const item = await fetchItemWithProduct(created.id, req.userId);
-    res.status(201).json({ ok: true, item });
+    const totalItems = await getTotalItems(req.userId);
+
+    res.status(201).json({ ok: true, item, total_items: totalItems });
 
 }));
 
@@ -162,7 +175,9 @@ router.patch("/items/:itemId", requireAuth, asyncHandler(async (req, res) => {
 
     const item = await fetchItemWithProduct(existingItem.id, req.userId);
 
-    res.json({ ok: true, item });
+    const totalItems = await getTotalItems(req.userId);
+
+    res.json({ ok: true, item, total_items: totalItems });
 }));
 
 router.delete("/items/:itemId", requireAuth, asyncHandler(async (req, res) => {
@@ -177,7 +192,10 @@ router.delete("/items/:itemId", requireAuth, asyncHandler(async (req, res) => {
     if (deleted === 0) {
         throw new HttpError(404, "Cart item not found", "CART_ITEM_NOT_FOUND");
     }
-    res.json({ ok: true });
+
+    const totalItems = await getTotalItems(req.userId);
+
+    res.json({ ok: true, total_items: totalItems });
 }));
 
 
@@ -186,7 +204,7 @@ router.delete("/", requireAuth, asyncHandler(async (req, res) => {
         where: { user_id: req.userId }
     });
 
-    res.json({ ok: true });
+    res.json({ ok: true, total_items: 0 });
 }));
 
 

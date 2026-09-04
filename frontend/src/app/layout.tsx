@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { nunito, azonix, cardot } from "@/lib/fonts";
+import { CartProvider } from "@/context/CartContext";
 
 export const metadata: Metadata = {
   title: "Store",
@@ -17,9 +18,11 @@ export default function RootLayout({
     <html lang="en" className={`${nunito.variable} ${azonix.variable} ${cardot.variable}`}>
       <body >
         <AuthProvider>
-          <main>
-            {children}
-          </main>
+          <CartProvider>
+            <main>
+              {children}
+            </main>
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

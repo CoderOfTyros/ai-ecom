@@ -1,12 +1,14 @@
 "use client";
 
-import { useRef, useState, useTransition, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import type { Product } from "@/types";
 import { ShoppingCart } from "lucide-react";
 import { api } from "@/lib/api/api";
 import { ApiError } from "@/lib/api/ApiError";
+import { useCart } from "@/context/CartContext";
+import type { CartItemMutationResponse } from "@/types/cart";
 
 const SUCCESS_MESSAGE_DURATION_MS = 2500;
 
@@ -25,8 +27,9 @@ export function AddToCartButton({
 }: AddToCartButtonProps) {
     const router = useRouter();
 
+    const { setCartCount } = useCart();
+
     const [isAdding, setIsAdding] = useState(false)
-    const [isRefreshing, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -34,8 +37,8 @@ export function AddToCartButton({
     const inFlight = useRef(false); // variable that survives react rerenders
 
     const isOutOfStock = product.stock_quantity <= 0;
-    const isBusy = isAdding || isRefreshing;
-    const isDisabled = isBusy || isOutOfStock || disabled;
+
+    const isDisabled = isAdding || isOutOfStock || disabled;
 
     useEffect(() => {
         if (!successMessage) return;
@@ -52,7 +55,7 @@ export function AddToCartButton({
 
 
     function getButtonLabel() {
-        if (isBusy) return "Adding...";
+        if (isAdding) return "Adding...";
         if (isOutOfStock) return "Out of stock";
 
         return "Add to cart";
@@ -70,16 +73,18 @@ export function AddToCartButton({
         setIsAdding(true);
 
         try {
-            await api(`/cart/items`, {
+            const data = await api<CartItemMutationResponse>(`/cart/items`, {
                 method: "POST",
                 body: JSON.stringify({ product_id: product.id, quantity }),
             });
+
+            setCartCount(data.total_items);
 
             setSuccessMessage("Added to cart");
 
             // router.refresh re-runs server components (e.g. a cart badge).
             // Drop this if your cart count lives in client context instead.
-            startTransition(() => router.refresh());
+
         }
 
         catch (err) {
@@ -106,7 +111,7 @@ export function AddToCartButton({
             type="button"
             onClick={handleClick}
             disabled={isDisabled}
-            aria-busy={isBusy}
+            aria-busy={isAdding}
             className="flex w-full h-full text-sm justify-center items-center  bg-emerald-800 text-white rounded-full px-6 gap-2 py-2 cursor-pointer transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:bg-gray-800"
         >
             <ShoppingCart aria-hidden={true} className="h-5 w-5" />

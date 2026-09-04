@@ -37,8 +37,8 @@ export function Navbar() {
 
         <nav className={`font-nunito w-full fixed z-50 top-0 text-white flex justify-between items-center h-20 ${transparent ? "bg-transparent" : "bg-emerald-900"} `} >
             <div className="ml-10 flex items-center h-full gap-x-6">
+                <Link href="/">Home</Link>
                 <Link href="/products">Products</Link>
-                <Link href="/about">About</Link>
             </div>
             {
                 loading ? (<div />) :

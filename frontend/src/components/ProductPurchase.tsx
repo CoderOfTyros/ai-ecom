@@ -43,7 +43,7 @@ export function ProductPurchase({ product }: { product: Product }) {
                         onClick={increaseQuantity}
                         disabled={quantity >= maxQuantity}
                         aria-label="Increase quantity"
-                        className="h-full w-11 cursor-pointer flex items-center justify-center text-gray-700 disabled:cursor-auto disabled:"
+                        className="h-full w-11 cursor-pointer flex items-center justify-center text-gray-700 disabled:cursor-auto disabled:text-gray-400"
                     >
                         <Plus className="size-5" strokeWidth={2} />
                     </button>

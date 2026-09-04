@@ -58,7 +58,7 @@ export default async function ProductDetailPage({ params }:
             <div className="col-span-3 relative h-full overflow-hidden rounded-lg" >
                 {
                     product.image_url ? (
-                        <Image fill src={product.image_url} alt={product.name} className="=" />
+                        <Image fill src={product.image_url} alt={product.name}  />
                     ) : (
                         <div className="flex h-full items-center justify-center text-gray-400">
                             No image
