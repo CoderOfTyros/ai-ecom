@@ -147,8 +147,8 @@ export default function CartView({ initialItems, initialSummary }: CartViewProps
     }
 
     return (
-        <main className="mt-30 px-10">
-            <h1 className="mt-10 text-center text-4xl font-semibold font-nunito">Your Shopping Cart</h1>
+        <main className="mt-35 px-10 mb-30">
+            <h1 className="mt-10 text-center text-3xl font-semibold font-nunito">Your Shopping Cart</h1>
             <div className="flex">
                 <section className="max-w-4xl mt-15">
 

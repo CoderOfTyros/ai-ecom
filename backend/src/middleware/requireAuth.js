@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import { OK } from "zod";
 import { HttpError } from "../errors/HttpError.js";
 
 export function requireAuth(req, res, next) {

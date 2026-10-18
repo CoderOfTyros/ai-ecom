@@ -21,7 +21,7 @@ export default function CartItem({ item, disabled, pending, onQuantityChange, on
     const itemTotal = product.price_cents * quantity;
 
     return (
-        <article className={`flex gap-x-5 border p-2 border-gray-200 transition-opacity ${pending ? "opacity-60" : ""}`}>
+        <article className={`flex gap-x-5  p-2  transition-opacity ${pending ? "opacity-60" : ""}`}>
             <Link href={`/products/${product.slug}`} className="relative size-29 rounded-lg overflow-hidden">
                 {product.image_url ? (
                     <Image
@@ -52,7 +52,7 @@ export default function CartItem({ item, disabled, pending, onQuantityChange, on
                     className="flex items-center  border-2 border-emerald-800 rounded-lg px-2"
                 >
                     <button
-                        className="text-gray-700 disabled:cursor-auto disabled:text-gray-400 flex items-center justify-center"
+                        className="text-gray-700 cursor-pointer disabled:cursor-auto disabled:text-gray-400 flex items-center justify-center"
                         type="button"
                         aria-label="Decrease quantity"
                         disabled={disabled || quantity <= 1}
@@ -62,7 +62,7 @@ export default function CartItem({ item, disabled, pending, onQuantityChange, on
                     <span className="w-10 text-center font-semibold">{quantity}</span>
 
                     <button
-                        className="text-gray-700 disabled:cursor-auto disabled:text-gray-400 flex items-center justify-center"
+                        className="text-gray-700 cursor-pointer disabled:cursor-auto disabled:text-gray-400 flex items-center justify-center"
                         type="button"
                         aria-label="Increase quantity"
                         disabled={disabled || quantity >= maxQuantity}
