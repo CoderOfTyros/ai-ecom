@@ -2,8 +2,10 @@ import express from "express";
 import { CartItem, Product } from "../models/index.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { readIntQuery } from "../utils/readIntQuery.js";
 import { HttpError } from "../errors/HttpError.js";
+import { validate } from "../validation/validate.js";
+import { itemIdParam, addCartItemBody, updateCartItemBody, CART_MAX_QUANTITY } from "../validation/schemas.js";
+import { calcShippingCents } from "../utils/shipping.js";
 
 const router = express.Router();
 
@@ -19,7 +21,14 @@ function summarize(items) {
         subtotalCents += plainItem.quantity * plainItem.product.price_cents;
     }
 
-    return { total_items: totalItems, subtotal_cents: subtotalCents };
+    const shippingCents = calcShippingCents(subtotalCents);
+
+    return {
+        total_items: totalItems,
+        subtotal_cents: subtotalCents,
+        shipping_cents: shippingCents,
+        total_cents: subtotalCents + shippingCents
+    };
 }
 
 async function getTotalItems(userId) {
@@ -89,17 +98,7 @@ router.get("/", requireAuth, asyncHandler(async (req, res) => {
 
 
 router.post("/items", requireAuth, asyncHandler(async (req, res) => {
-    const productId = readIntQuery(req.body?.product_id, {
-        name: "product_id", defaultValue: undefined, min: 1, max: 2147483647
-    });
-    if (productId === undefined) {
-        throw new HttpError(400, "Validation failed", "VALIDATION_ERROR", {
-            fields: { product_id: "Product id is required" }
-        });
-    }
-    const quantity = readIntQuery(req.body?.quantity, {
-        name: "quantity", defaultValue: 1, min: 1, max: 99
-    });
+    const { product_id: productId, quantity } = validate(addCartItemBody, req.body);
 
     const product = await findActiveProduct(productId);
 
@@ -111,10 +110,10 @@ router.post("/items", requireAuth, asyncHandler(async (req, res) => {
     if (existingItem) {
         const newQuantity = quantity + existingItem.quantity;
 
-        if (newQuantity > 99) {
+        if (newQuantity > CART_MAX_QUANTITY) {
             throw new HttpError(400, "Validation failed", "VALIDATION_ERROR", {
                 fields: {
-                    quantity: "Cart item quantity cannot exceed 99",
+                    quantity: `Cart item quantity cannot exceed ${CART_MAX_QUANTITY}`,
                 },
             });
         }
@@ -145,19 +144,8 @@ router.post("/items", requireAuth, asyncHandler(async (req, res) => {
 
 
 router.patch("/items/:itemId", requireAuth, asyncHandler(async (req, res) => {
-    const itemId = readIntQuery(req.params.itemId, {
-        name: "item_id", defaultValue: undefined, min: 1, max: 2147483647
-    });
-
-    const quantity = readIntQuery(req.body?.quantity, {
-        name: "quantity", defaultValue: undefined, min: 1, max: 99
-    });
-
-    if (quantity === undefined) {
-        throw new HttpError(400, "Validation failed", "VALIDATION_ERROR", {
-            fields: { quantity: "Quantity is required" }
-        });
-    }
+    const { itemId } = validate(itemIdParam, req.params);
+    const { quantity } = validate(updateCartItemBody, req.body);
 
     const existingItem = await CartItem.findOne({
         where: { id: itemId, user_id: req.userId }
@@ -181,9 +169,7 @@ router.patch("/items/:itemId", requireAuth, asyncHandler(async (req, res) => {
 }));
 
 router.delete("/items/:itemId", requireAuth, asyncHandler(async (req, res) => {
-    const itemId = readIntQuery(req.params.itemId, {
-        name: "itemId", defaultValue: undefined, min: 1, max: 2147483647
-    });
+    const { itemId } = validate(itemIdParam, req.params);
 
     const deleted = await CartItem.destroy({
         where: { id: itemId, user_id: req.userId }

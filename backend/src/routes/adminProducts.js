@@ -4,64 +4,11 @@ import { requireAuth } from "../middleware/requireAuth.js";
 import { requireAdmin } from "../middleware/requireAdmin.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { HttpError } from "../errors/HttpError.js";
-import { readIntQuery } from "../utils/readIntQuery.js";
+import { validate } from "../validation/validate.js";
+import { idParam, createProductBody, updateProductBody, productStatusBody } from "../validation/schemas.js";
 
 
 const router = express.Router();
-
-const VALID_STATUSES = ["active", "draft", "archived"];
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const PRODUCT_FIELDS = ["slug", "name", "description", "price_cents", "image_url", "category", "stock_quantity"];
-
-function validateProductFields(body, { partial = false } = {}) {
-    const fields = {};
-    const {
-        slug, name, description, price_cents, image_url,
-        category, stock_quantity
-    } = body ?? {};
-
-
-    if (!partial || slug !== undefined) {
-        if (typeof slug !== "string" || !SLUG_PATTERN.test(slug)) {
-            fields.slug = "Slug must be a lowercase alphanumeric with hyphens (e.g. gaming-mouse)";
-        }
-    }
-
-    if (!partial || name !== undefined) {
-        if (typeof name !== "string" || !name.trim()) {
-            fields.name = "Name is required";
-        }
-    }
-
-    if (!partial || price_cents !== undefined) {
-        if (!Number.isInteger(price_cents) || price_cents < 0) {
-            fields.price_cents = "Must be a non-negative integer";
-        }
-    }
-
-    if (stock_quantity !== undefined && stock_quantity !== null) {
-        if (!Number.isInteger(stock_quantity) || stock_quantity < 0) {
-            fields.stock_quantity = "Must be a non-negative integer";
-        }
-    }
-
-    if (description !== undefined && description !== null && typeof description !== "string") {
-        fields.description = "Must be a string or null";
-    }
-
-    if (image_url !== undefined && image_url !== null && typeof image_url !== "string") {
-        fields.image_url = "Must be a string or null";
-    }
-
-    if (category !== undefined && (typeof category !== "string" || !category.trim())) {
-        fields.category = "Must be a non-empty string";
-    }
-
-    if (Object.keys(fields).length) {
-        throw new HttpError(400, "Validation failed", "VALIDATION_ERROR", { fields });
-    }
-
-}
 
 
 // ROUTES
@@ -69,20 +16,19 @@ function validateProductFields(body, { partial = false } = {}) {
 
 router.post("/products", requireAuth, requireAdmin,
     asyncHandler(async (req, res) => {
-        validateProductFields(req.body);
-
-        const { slug, name, description, price_cents, stock_quantity, image_url, category } = req.body;
+        const { slug, name, description, price_cents, stock_quantity, image_url, category } =
+            validate(createProductBody, req.body);
 
         let product;
 
         try {
             product = await Product.create({
                 slug,
-                name: name.trim(),
+                name,
                 description: description ?? null,
                 price_cents,
                 image_url: image_url ?? null,
-                category: category?.trim() || "general",
+                category: category || "general",
                 stock_quantity: stock_quantity ?? 0,
                 status: "active"
 
@@ -101,12 +47,8 @@ router.post("/products", requireAuth, requireAdmin,
 
 router.patch("/products/:id", requireAuth, requireAdmin,
     asyncHandler(async (req, res) => {
-        const id = readIntQuery(req.params.id, {
-            name: "id", defaultValue: undefined, min: 1, max: 2147483647
-        });
-
-
-        validateProductFields(req.body, { partial: true });
+        const { id } = validate(idParam, req.params);
+        const changes = validate(updateProductBody, req.body);
 
         const product = await Product.findByPk(id);
 
@@ -114,10 +56,10 @@ router.patch("/products/:id", requireAuth, requireAdmin,
             throw new HttpError(404, "Product not found", "PRODUCT_NOT_FOUND");
         }
 
-        for (const field of PRODUCT_FIELDS) {
-            if (req.body[field] !== undefined) {
-                product[field] = typeof req.body[field] === "string" ?
-                    req.body[field].trim() : req.body[field];
+        // zod already trimmed strings and removed unknown keys
+        for (const [field, value] of Object.entries(changes)) {
+            if (value !== undefined) {
+                product[field] = value;
             }
         }
 
@@ -137,17 +79,8 @@ router.patch("/products/:id", requireAuth, requireAdmin,
 
 router.patch("/products/:id/status", requireAuth, requireAdmin,
     asyncHandler(async (req, res) => {
-        const id = readIntQuery(req.params.id, {
-            name: "id", defaultValue: undefined, min: 1, max: 2147483647
-        });
-
-        const { status } = req.body ?? {};
-
-        if (!VALID_STATUSES.includes(status)) {
-            throw new HttpError(400, "Validation failed", "VALIDATION_ERROR", {
-                fields: { status: `Must be one of the following: ${VALID_STATUSES.join(", ")}` }
-            });
-        }
+        const { id } = validate(idParam, req.params);
+        const { status } = validate(productStatusBody, req.body);
 
         const product = await Product.findByPk(id);
 

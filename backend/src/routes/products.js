@@ -1,6 +1,7 @@
 import express from "express";
 import { sequelize } from "../db.js";
-import { readIntQuery } from "../utils/readIntQuery.js";
+import { validate } from "../validation/validate.js";
+import { productListQuery } from "../validation/schemas.js";
 import { Product } from "../models/index.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { HttpError } from "../errors/HttpError.js";
@@ -18,41 +19,29 @@ const SORT_OPTIONS = {
 router.get("/",
     asyncHandler(async (req, res) => {
 
-        const page = readIntQuery(req.query.page, {
-            name: "page", defaultValue: 1, min: 1, max: 100000
-        });
-        const limit = readIntQuery(req.query.limit, {
-            name: "limit", defaultValue: 12, min: 1, max: 50
-        });
+        const {
+            page, limit, category, search, sort,
+            min_price: minPrice, max_price: maxPrice
+        } = validate(productListQuery, req.query);
 
         const offset = (page - 1) * limit;
 
 
         const where = { status: "active" };
 
-        const { category, search, sort } = req.query;
-
-        if (typeof category === "string" && category.trim()) {
-            where.category = category.trim().toLowerCase();
+        if (category) {
+            where.category = category;
         }
 
 
-        if (typeof search === "string" && search.trim()) {
-            const term = `%${search.trim()}%`;
+        if (search) {
+            const term = `%${search}%`;
 
             where[Op.or] = [
                 { name: { [Op.iLike]: term } },
                 { description: { [Op.iLike]: term } }
             ];
         }
-
-        const minPrice = readIntQuery(req.query.min_price, {
-            name: "min_price", defaultValue: undefined, min: 0, max: 2147483647
-        });
-
-        const maxPrice = readIntQuery(req.query.max_price, {
-            name: "max_price", defaultValue: undefined, min: 0, max: 2147483647
-        });
 
         if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
             throw new HttpError(400, "Validation failed", "VALIDATION_ERROR", {
@@ -66,7 +55,7 @@ router.get("/",
             if (maxPrice !== undefined) where.price_cents[Op.lte] = maxPrice;
         }
 
-        const order = SORT_OPTIONS[sort] || SORT_OPTIONS.newest;
+        const order = SORT_OPTIONS[sort];
 
         const { count, rows } = await Product.findAndCountAll({
             where,
@@ -93,9 +82,6 @@ router.get("/",
 
 
 router.get("/:slug", asyncHandler(async (req, res) => {
-    // const id = readIntQuery(req.params.id, {
-    //     name: "id", defaultValue: undefined, min: 1, max: 2147483647
-    // })
     const slug = req.params.slug;
 
     const product = await Product.findOne({

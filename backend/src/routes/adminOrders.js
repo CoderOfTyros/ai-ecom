@@ -5,13 +5,11 @@ import { requireAuth } from "../middleware/requireAuth.js";
 import { requireAdmin } from "../middleware/requireAdmin.js";
 import { HttpError } from "../errors/HttpError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { readIntQuery } from "../utils/readIntQuery.js";
+import { validate } from "../validation/validate.js";
+import { idParam, adminOrderListQuery, orderStatusBody } from "../validation/schemas.js";
 
 
 const router = express.Router();
-
-
-const VALID_STATUSES = ["confirmed", "cancelled"];
 
 const ORDER_ITEM_FIELDS = [
     "id", "product_id", "product_snapshot", "quantity",
@@ -22,30 +20,18 @@ router.use(requireAuth, requireAdmin);
 
 
 router.get("/orders", asyncHandler(async (req, res) => {
-    const page = readIntQuery(req.query.page, {
-        name: "page", defaultValue: 1, min: 1, max: 99999
-    });
-
-    const limit = readIntQuery(req.query.limit, {
-        name: "limit", defaultValue: 20, min: 1, max: 50
-    });
+    const { page, limit, status, user_id: userId } = validate(adminOrderListQuery, req.query);
 
     const offset = (page - 1) * limit;
 
     const where = {};
 
     //filter by status
-    const { status } = req.query;
-
-    if (typeof status === "string" && VALID_STATUSES.includes(status)) {
+    if (status !== undefined) {
         where.status = status;
     }
 
-    //filter by user id 
-    const userId = readIntQuery(req.query.user_id, {
-        name: "user_id", defaultValue: undefined, min: 1, max: 2147483647
-    });
-
+    //filter by user id
     if (userId !== undefined) {
         where.user_id = userId;
     }
@@ -78,9 +64,7 @@ router.get("/orders", asyncHandler(async (req, res) => {
 
 
 router.get("/orders/:id", asyncHandler(async (req, res) => {
-    const id = readIntQuery(req.params.id, {
-        name: "id", defaultValue: undefined, min: 1, max: 2147483647
-    });
+    const { id } = validate(idParam, req.params);
 
     const order = await Order.findByPk(id, {
         include: [
@@ -107,19 +91,8 @@ router.get("/orders/:id", asyncHandler(async (req, res) => {
 
 
 router.patch("/orders/:id/status", asyncHandler(async (req, res) => {
-    const id = readIntQuery(req.params.id, {
-        name: "id", defaultValue: undefined, min: 1, max: 2147483647
-    });
-
-    const { status } = req.body ?? {};
-
-    if (!VALID_STATUSES.includes(status)) {
-        throw new HttpError(400, "Validation failed", "VALIDATION_ERROR", {
-            fields: {
-                status: `Must be one of: ${VALID_STATUSES.join(", ")}`
-            }
-        });
-    }
+    const { id } = validate(idParam, req.params);
+    const { status } = validate(orderStatusBody, req.body);
 
     const updatedOrder = await sequelize.transaction(async (t) => {
         const order = await Order.findByPk(id, {

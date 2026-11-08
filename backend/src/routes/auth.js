@@ -1,11 +1,12 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { sequelize } from "../db.js";
 import { User } from "../models/index.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { HttpError } from "../errors/HttpError.js";
+import { validate } from "../validation/validate.js";
+import { registerBody, loginBody } from "../validation/schemas.js";
 
 const router = express.Router();
 const COOKIE_NAME = process.env.COOKIE_NAME || "auth_token"
@@ -41,22 +42,7 @@ function signAuthToken(userId) {
 //ROUTES
 
 router.post("/register", asyncHandler(async (req, res) => {
-    const { first_name, last_name, email, password } = req.body ?? {};
-
-    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
-
-    const validationErrors = {};
-    if (!normalizedEmail || !normalizedEmail.includes("@")) {
-        validationErrors.email = "Valid email required";
-    }
-
-    if (typeof password !== "string" || password.length < 8) {
-        validationErrors.password = "Password must be at least 8 characters";
-    }
-
-    if (Object.keys(validationErrors).length) {
-        throw new HttpError(400, "Validation failed", "VALIDATION_ERROR", { validationErrors });
-    }
+    const { first_name, last_name, email: normalizedEmail, password } = validate(registerBody, req.body);
 
     const passwordHash = await bcrypt.hash(password, 10);
 
@@ -97,16 +83,7 @@ router.post("/register", asyncHandler(async (req, res) => {
 
 
 router.post("/login", asyncHandler(async (req, res) => {
-    const { email, password } = req.body ?? {};
-
-    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
-
-    const validationErrors = {};
-    if (!normalizedEmail) validationErrors.email = "Email required";
-    if (typeof password !== "string" || !password) validationErrors.password = "Password required";
-    if (Object.keys(validationErrors).length) {
-        throw new HttpError(400, "Validation failed", "VALIDATION_ERROR", { validationErrors });
-    }
+    const { email: normalizedEmail, password } = validate(loginBody, req.body);
 
     const user = await User.scope("withPassword").findOne({
         where: { email: normalizedEmail }

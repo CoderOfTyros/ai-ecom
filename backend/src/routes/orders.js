@@ -4,7 +4,9 @@ import { sequelize } from "../db.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { HttpError } from "../errors/HttpError.js";
 import { requireAuth } from "../middleware/requireAuth.js";
-import { readIntQuery } from "../utils/readIntQuery.js";
+import { calcShippingCents } from "../utils/shipping.js";
+import { validate } from "../validation/validate.js";
+import { idParam, orderListQuery, shippingAddress } from "../validation/schemas.js";
 
 
 const router = express.Router();
@@ -14,10 +16,13 @@ const ORDER_ITEM_FIELDS = ["id", "product_id", "product_snapshot", "quantity",
 
 
 router.post("/", requireAuth, asyncHandler(async (req, res) => {
+    const address = validate(shippingAddress, req.body?.shipping_address);
 
     const result = await sequelize.transaction(async (t) => {
         const cartItems = await CartItem.findAll({
             where: { user_id: req.userId },
+            // lock products in the same order every time, so two checkouts cannot block each other
+            order: [["product_id", "ASC"]],
             transaction: t,
             lock: t.LOCK.UPDATE
         });
@@ -62,10 +67,17 @@ router.post("/", requireAuth, asyncHandler(async (req, res) => {
             });
         }
 
-        const order = await Order.create(
-            { user_id: req.userId, subtotal_cents: subtotalCents },
-            { transaction: t }
-        );
+        const shippingCents = calcShippingCents(subtotalCents);
+
+        const order = await Order.create({
+            user_id: req.userId,
+            subtotal_cents: subtotalCents,
+            shipping_address: address,
+            shipping_cents: shippingCents,
+            total_cents: subtotalCents + shippingCents,
+            payment_method: "cod",
+            payment_status: "unpaid"
+        }, { transaction: t });
 
 
         for (const { product, quantity, lineTotalCents } of orderItemsData) {
@@ -116,13 +128,7 @@ router.post("/", requireAuth, asyncHandler(async (req, res) => {
 
 
 router.get("/", requireAuth, asyncHandler(async (req, res) => {
-    const page = readIntQuery(req.query.page, {
-        name: "page", defaultValue: 1, min: 1, max: 10000
-    });
-
-    const limit = readIntQuery(req.query.limit, {
-        name: "limit", defaultValue: 10, min: 1, max: 50
-    });
+    const { page, limit } = validate(orderListQuery, req.query);
 
     const offset = (page - 1) * limit;
 
@@ -149,9 +155,7 @@ router.get("/", requireAuth, asyncHandler(async (req, res) => {
 
 
 router.get("/:id", requireAuth, asyncHandler(async (req, res) => {
-    const id = readIntQuery(req.params.id, {
-        name: "id", defaultValue: undefined, min: 1, max: 2147483647
-    });
+    const { id } = validate(idParam, req.params);
 
     const order = await Order.findOne({
         where: { id, user_id: req.userId },
