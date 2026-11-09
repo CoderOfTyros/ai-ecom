@@ -2,11 +2,13 @@ import Link from "next/link";
 import { ArrowRight, Lock } from "lucide-react";
 
 import type { CartSummary } from "@/types/cart";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatShipping } from "@/lib/format";
 
 
 export function CartSummaryCard({ summary }: { summary: CartSummary }) {
     const itemLabel = summary.total_items === 1 ? "item" : "items";
+    // the free-shipping limit comes from the backend, so it is never out of date
+    const amountForFreeShipping = Math.max(0, summary.free_shipping_min_cents - summary.subtotal_cents);
 
     return (
         <aside className="w-full">
@@ -20,22 +22,28 @@ export function CartSummaryCard({ summary }: { summary: CartSummary }) {
                     </div>
                     <div className="flex justify-between">
                         <dt className="text-zinc-500">Shipping</dt>
-                        <dd className="text-zinc-500">Calculated at checkout</dd>
+                        <dd className="font-semibold text-zinc-800">{formatShipping(summary.shipping_cents)}</dd>
                     </div>
 
                     <div className="mt-3 flex items-baseline justify-between border-t border-zinc-200 pt-4">
                         <dt className="text-base font-bold">Total</dt>
-                        <dd className="text-2xl font-bold text-emerald-900">{formatPrice(summary.subtotal_cents)}</dd>
+                        <dd className="text-2xl font-bold text-emerald-900">{formatPrice(summary.total_cents)}</dd>
                     </div>
                 </dl>
 
-                <button
-                    type="button"
-                    className="group mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-800 px-6 py-3 text-base font-semibold text-white transition cursor-pointer hover:bg-emerald-900 disabled:cursor-not-allowed disabled:bg-gray-400"
+                {amountForFreeShipping > 0 && (
+                    <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-center text-xs text-emerald-900">
+                        Add {formatPrice(amountForFreeShipping)} more for free shipping
+                    </p>
+                )}
+
+                <Link
+                    href="/checkout"
+                    className="group mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-800 px-6 py-3 text-base font-semibold text-white transition hover:bg-emerald-900"
                 >
                     Checkout
                     <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-                </button>
+                </Link>
 
                 <Link
                     href="/products"

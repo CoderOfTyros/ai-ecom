@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 
 import type {
     CartItem as CartItemType,
-    CartItemMutationResponse,
+    UpdateCartItemResponse,
     DeleteCartItemResponse,
     CartSummary
 } from "@/types/cart";
@@ -25,12 +25,6 @@ interface CartViewProps {
 interface CartState {
     items: CartItemType[];
     summary: CartSummary;
-}
-
-function calculateSubtotal(items: CartItemType[]) {
-    return items.reduce((total, item) =>
-        total + item.quantity * item.product.price_cents
-        , 0);
 }
 
 export default function CartView({ initialItems, initialSummary }: CartViewProps) {
@@ -57,24 +51,18 @@ export default function CartView({ initialItems, initialSummary }: CartViewProps
             setPendingItemId(itemId);
             setError(null);
 
-            const data = await api<CartItemMutationResponse>(`/cart/items/${itemId}`, {
+            const data = await api<UpdateCartItemResponse>(`/cart/items/${itemId}`, {
                 method: "PATCH",
                 body: JSON.stringify({ quantity })
             });
 
-            setCart((currentCart) => {
-                const updatedItems = currentCart.items.map((item) =>
+            // the backend sends the new subtotal, shipping and total
+            setCart((currentCart) => ({
+                items: currentCart.items.map((item) =>
                     item.id === data.item.id ? data.item : item
-                );
-
-                return {
-                    items: updatedItems,
-                    summary: {
-                        total_items: data.total_items,
-                        subtotal_cents: calculateSubtotal(updatedItems)
-                    }
-                }
-            });
+                ),
+                summary: data.summary
+            }));
 
             setCartCount(data.total_items);
         } catch (err) {
@@ -101,18 +89,10 @@ export default function CartView({ initialItems, initialSummary }: CartViewProps
                 method: "DELETE"
             });
 
-            setCart((currentCart) => {
-                const updatedItems = currentCart.items.filter((item) =>
-                    item.id !== itemId
-                );
-                return {
-                    items: updatedItems,
-                    summary: {
-                        total_items: data.total_items,
-                        subtotal_cents: calculateSubtotal(updatedItems)
-                    }
-                }
-            });
+            setCart((currentCart) => ({
+                items: currentCart.items.filter((item) => item.id !== itemId),
+                summary: data.summary
+            }));
 
             setCartCount(data.total_items);
         } catch (err) {
@@ -129,7 +109,7 @@ export default function CartView({ initialItems, initialSummary }: CartViewProps
 
     if (cart.items.length === 0) {
         return (
-            <main className="mx-auto mt-32 max-w-5xl px-6 text-center">
+            <main className="mx-auto mt-35 mb-30 max-w-5xl px-6 text-center">
                 <h1 className="text-3xl font-bold">Your cart is empty</h1>
 
                 <p className="mt-3 text-gray-500">
@@ -138,7 +118,7 @@ export default function CartView({ initialItems, initialSummary }: CartViewProps
 
                 <Link
                     href="/products"
-                    className="mt-6 inline-block rounded-full bg-emerald-900 px-6 py-3 font-semibold text-white transition hover:bg-emerald-800"
+                    className="mt-25 inline-block rounded-full bg-emerald-900 px-6 py-3 font-semibold text-white transition hover:bg-emerald-800"
                 >
                     Browse products
                 </Link>

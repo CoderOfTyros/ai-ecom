@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { api } from "@/lib/api/api";
 import { ApiError } from "@/lib/api/ApiError";
@@ -11,8 +10,6 @@ import Image from "next/image";
 
 
 export default function LoginPage() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
     const { refresh } = useAuth();
 
     const [email, setEmail] = useState("");
@@ -34,10 +31,9 @@ export default function LoginPage() {
                 body: JSON.stringify({ email, password })
             });
 
+            // refresh() sets the user. Then (auth)/layout.tsx sends them
+            // to the "from" page (or "/"), so we do not redirect here.
             await refresh();
-
-            const from = searchParams.get("from");
-            router.replace(from || "/");
         } catch (err) {
             if (err instanceof ApiError) {
                 if (err.fields) {

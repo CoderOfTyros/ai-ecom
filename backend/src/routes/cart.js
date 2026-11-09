@@ -5,7 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { HttpError } from "../errors/HttpError.js";
 import { validate } from "../validation/validate.js";
 import { itemIdParam, addCartItemBody, updateCartItemBody, CART_MAX_QUANTITY } from "../validation/schemas.js";
-import { calcShippingCents } from "../utils/shipping.js";
+import { calcShippingCents, FREE_SHIPPING_MIN_CENTS } from "../utils/shipping.js";
 
 const router = express.Router();
 
@@ -27,8 +27,28 @@ function summarize(items) {
         total_items: totalItems,
         subtotal_cents: subtotalCents,
         shipping_cents: shippingCents,
-        total_cents: subtotalCents + shippingCents
+        total_cents: subtotalCents + shippingCents,
+        free_shipping_min_cents: FREE_SHIPPING_MIN_CENTS
     };
+}
+
+// Cart items whose product is still active (what the cart page shows)
+async function getActiveCartItems(userId) {
+    return CartItem.findAll({
+        where: { user_id: userId },
+        include: [{
+            model: Product,
+            as: "product",
+            attributes: CART_PRODUCT_FIELDS,
+            where: { status: "active" },
+            required: true
+        }],
+        order: [["created_at", "DESC"]]
+    });
+}
+
+async function getSummary(userId) {
+    return summarize(await getActiveCartItems(userId));
 }
 
 async function getTotalItems(userId) {
@@ -76,17 +96,7 @@ function assertStock(product, requestedQuantity) {
 // ROUTES
 
 router.get("/", requireAuth, asyncHandler(async (req, res) => {
-    const items = await CartItem.findAll({
-        where: { user_id: req.userId },
-        include: [{
-            model: Product,
-            as: "product",
-            attributes: CART_PRODUCT_FIELDS,
-            where: { status: "active" },
-            required: true
-        }],
-        order: [["created_at", "DESC"]]
-    });
+    const items = await getActiveCartItems(req.userId);
 
     res.json({
         ok: true,
@@ -165,7 +175,9 @@ router.patch("/items/:itemId", requireAuth, asyncHandler(async (req, res) => {
 
     const totalItems = await getTotalItems(req.userId);
 
-    res.json({ ok: true, item, total_items: totalItems });
+    const summary = await getSummary(req.userId);
+
+    res.json({ ok: true, item, total_items: totalItems, summary });
 }));
 
 router.delete("/items/:itemId", requireAuth, asyncHandler(async (req, res) => {
@@ -181,7 +193,9 @@ router.delete("/items/:itemId", requireAuth, asyncHandler(async (req, res) => {
 
     const totalItems = await getTotalItems(req.userId);
 
-    res.json({ ok: true, total_items: totalItems });
+    const summary = await getSummary(req.userId);
+
+    res.json({ ok: true, total_items: totalItems, summary });
 }));
 
 

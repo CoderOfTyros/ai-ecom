@@ -16,7 +16,7 @@ export default async function CartPage() {
 
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) {
-            redirect("/login");
+            redirect("/login?from=/cart");
         }
 
         throw err;

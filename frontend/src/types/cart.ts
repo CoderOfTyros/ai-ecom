@@ -19,6 +19,9 @@ export interface CartItem {
 export interface CartSummary {
     total_items: number;
     subtotal_cents: number;
+    shipping_cents: number;
+    total_cents: number;
+    free_shipping_min_cents: number;
 }
 
 export interface CartResponse {
@@ -33,9 +36,16 @@ export interface CartItemMutationResponse {
     total_items: number;
 }
 
+// PATCH /cart/items/:id
+export interface UpdateCartItemResponse extends CartItemMutationResponse {
+    summary: CartSummary;
+}
+
+// DELETE /cart/items/:id
 export interface DeleteCartItemResponse {
     ok: true;
     total_items: number;
+    summary: CartSummary;
 }
 
 export interface ClearCartResponse {
