@@ -8,7 +8,8 @@ const features = [
     { title: "Customer Focused", description: "Your satisfaction drives everything we do.", icon: UsersRound },
 ];
 
-export function AboutSection() {
+// showLearnMore: false on the /about page itself (the button links to /about)
+export function AboutSection({ showLearnMore = true }: { showLearnMore?: boolean }) {
     return (
         <section className="bg-gray-200 w-full py-20 border-t border-zinc-300">
             <div className="max-w-7xl flex flex-col items-center mx-auto gap-y-4">
@@ -27,9 +28,11 @@ export function AboutSection() {
                     ))}
                 </div>
 
-                <div className="mt-12 ">
-                    <Link href="/about" className="font-semibold bg-emerald-800 text-white px-6 py-3 rounded-xl">Learn More About Us</Link>
-                </div>
+                {showLearnMore && (
+                    <div className="mt-12 ">
+                        <Link href="/about" className="font-semibold bg-emerald-800 text-white px-6 py-3 rounded-xl">Learn More About Us</Link>
+                    </div>
+                )}
             </div>
         </section>
     )
