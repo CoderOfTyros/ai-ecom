@@ -82,14 +82,14 @@ export default function RegisterPage() {
                         <div className="text-xl w-1/2 flex gap-x-4">
                             <div>
                                 <input type="text" id="first_name" placeholder="First name" className="rounded-lg border-3 border-emerald-800 w-full px-3 py-1.5" required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                                {fieldErrors.firstName && (
-                                    <p className="mt-1 text-sm text-red-600">{fieldErrors.firstName}</p>
+                                {fieldErrors.first_name && (
+                                    <p className="mt-1 text-sm text-red-600">{fieldErrors.first_name}</p>
                                 )}
                             </div>
                             <div>
                                 <input type="text" id="last_name" placeholder="Last name" className="rounded-lg border-3 border-emerald-800 w-full px-3 py-1.5" required value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                                {fieldErrors.lastName && (
-                                    <p className="mt-1 text-sm text-red-600">{fieldErrors.lastName}</p>
+                                {fieldErrors.last_name && (
+                                    <p className="mt-1 text-sm text-red-600">{fieldErrors.last_name}</p>
                                 )}
                             </div>
                         </div>

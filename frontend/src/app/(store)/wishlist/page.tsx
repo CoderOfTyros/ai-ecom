@@ -20,7 +20,7 @@ export default function WishlistPage() {
 
             <Link
                 href="/products"
-                className="mt-10 inline-block rounded-full bg-emerald-900 px-6 py-3 font-semibold text-white transition hover:bg-emerald-800"
+                className="mt-15 inline-block rounded-full bg-emerald-900 px-6 py-3 font-semibold text-white transition hover:bg-emerald-800"
             >
                 Browse products
             </Link>
